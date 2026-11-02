@@ -45,6 +45,26 @@ public class NativeDataset implements Dataset {
       fileFormatId = fragmentScanOptions.fileFormat().id();
       serialized = fragmentScanOptions.serialize();
     }
+    if (options.hasReadahead()) {
+      try {
+        return new NativeScanner(
+            context,
+            JniWrapper.get()
+                .createScannerWithReadahead(
+                    datasetId,
+                    options.getColumns().orElse(null),
+                    options.getSubstraitProjection().orElse(null),
+                    options.getSubstraitFilter().orElse(null),
+                    options.getBatchSize(),
+                    fileFormatId,
+                    serialized,
+                    options.getBatchReadahead(),
+                    options.getFragmentReadahead(),
+                    context.getMemoryPool().getNativeInstanceId()));
+      } catch (UnsatisfiedLinkError e) {
+        // a native library without createScannerWithReadahead: scan with the default read-ahead
+      }
+    }
     long scannerId =
         JniWrapper.get()
             .createScanner(

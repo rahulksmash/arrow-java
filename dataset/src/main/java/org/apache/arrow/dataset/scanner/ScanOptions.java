@@ -28,6 +28,8 @@ public class ScanOptions {
   private final Optional<ByteBuffer> substraitFilter;
 
   private final Optional<FragmentScanOptions> fragmentScanOptions;
+  private final int batchReadahead;
+  private final int fragmentReadahead;
 
   /**
    * Constructor.
@@ -68,6 +70,8 @@ public class ScanOptions {
     this.substraitProjection = Optional.empty();
     this.substraitFilter = Optional.empty();
     this.fragmentScanOptions = Optional.empty();
+    this.batchReadahead = -1;
+    this.fragmentReadahead = -1;
   }
 
   public ScanOptions(long batchSize) {
@@ -94,6 +98,21 @@ public class ScanOptions {
     return fragmentScanOptions;
   }
 
+  /** Batches to read ahead within a fragment; -1 for the native default. */
+  public int getBatchReadahead() {
+    return batchReadahead;
+  }
+
+  /** Fragments to read ahead; -1 for the native default. */
+  public int getFragmentReadahead() {
+    return fragmentReadahead;
+  }
+
+  /** Whether either read-ahead was set. */
+  public boolean hasReadahead() {
+    return batchReadahead >= 0 || fragmentReadahead >= 0;
+  }
+
   /** Builder for Options used during scanning. */
   public static class Builder {
     private final long batchSize;
@@ -101,6 +120,8 @@ public class ScanOptions {
     private ByteBuffer substraitProjection;
     private ByteBuffer substraitFilter;
     private FragmentScanOptions fragmentScanOptions;
+    private int batchReadahead = -1;
+    private int fragmentReadahead = -1;
 
     /**
      * Constructor.
@@ -160,6 +181,20 @@ public class ScanOptions {
       return this;
     }
 
+    /** Batches to read ahead within a fragment (native default 16); 0 for none. */
+    public Builder batchReadahead(int batchReadahead) {
+      Preconditions.checkArgument(batchReadahead >= 0, "batchReadahead must be >= 0");
+      this.batchReadahead = batchReadahead;
+      return this;
+    }
+
+    /** Fragments (files) to read ahead (native default 4); 0 for none. */
+    public Builder fragmentReadahead(int fragmentReadahead) {
+      Preconditions.checkArgument(fragmentReadahead >= 0, "fragmentReadahead must be >= 0");
+      this.fragmentReadahead = fragmentReadahead;
+      return this;
+    }
+
     public ScanOptions build() {
       return new ScanOptions(this);
     }
@@ -171,5 +206,7 @@ public class ScanOptions {
     substraitProjection = Optional.ofNullable(builder.substraitProjection);
     substraitFilter = Optional.ofNullable(builder.substraitFilter);
     fragmentScanOptions = Optional.ofNullable(builder.fragmentScanOptions);
+    batchReadahead = builder.batchReadahead;
+    fragmentReadahead = builder.fragmentReadahead;
   }
 }

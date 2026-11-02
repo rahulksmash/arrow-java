@@ -211,6 +211,35 @@ public class TestFileSystemDataset extends TestNativeDataset {
   }
 
   @Test
+  public void testParquetReadaheadZero() throws Exception {
+    ParquetWriteSupport writeSupport =
+        ParquetWriteSupport.writeTempFile(AVRO_SCHEMA_USER, TMP, 1, "a", 2, "b", 3, "c");
+
+    ScanOptions options =
+        new ScanOptions.Builder(1)
+            .columns(Optional.empty())
+            .batchReadahead(0)
+            .fragmentReadahead(0)
+            .build();
+    FileSystemDatasetFactory factory =
+        new FileSystemDatasetFactory(
+            rootAllocator(),
+            NativeMemoryPool.getDefault(),
+            FileFormat.PARQUET,
+            writeSupport.getOutputURI());
+    Schema schema = inferResultSchemaFromFactory(factory, options);
+    List<ArrowRecordBatch> datum = collectResultFromFactory(factory, options);
+
+    assertScanBatchesProduced(factory, options);
+    assertEquals(3, datum.size());
+    datum.forEach(batch -> assertEquals(1, batch.getLength()));
+    checkParquetReadResult(schema, writeSupport.getWrittenRecords(), datum);
+
+    AutoCloseables.close(datum);
+    AutoCloseables.close(factory);
+  }
+
+  @Test
   public void testParquetDirectoryRead() throws Exception {
     final File outputFolder = TMP;
     ParquetWriteSupport.writeTempFile(AVRO_SCHEMA_USER, outputFolder, 1, "a", 2, "b", 3, "c");

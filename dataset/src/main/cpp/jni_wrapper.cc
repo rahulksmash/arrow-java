@@ -635,14 +635,15 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_dataset_jni_JniWrapper_closeDataset
 
 /*
  * Class:     org_apache_arrow_dataset_jni_JniWrapper
- * Method:    createScanner
+ * Method:    createScannerWithReadahead
  * Signature:
- * (J[Ljava/lang/String;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;JI;[Ljava/lang/String;J)J
+ * (J[Ljava/lang/String;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;JI[Ljava/lang/String;IIJ)J
  */
-JNIEXPORT jlong JNICALL Java_org_apache_arrow_dataset_jni_JniWrapper_createScanner(
+JNIEXPORT jlong JNICALL Java_org_apache_arrow_dataset_jni_JniWrapper_createScannerWithReadahead(
     JNIEnv* env, jobject, jlong dataset_id, jobjectArray columns,
     jobject substrait_projection, jobject substrait_filter, jlong batch_size,
-    jint file_format_id, jobjectArray options, jlong memory_pool_id) {
+    jint file_format_id, jobjectArray options, jint batch_readahead,
+    jint fragment_readahead, jlong memory_pool_id) {
   JNI_METHOD_START
   arrow::MemoryPool* pool = reinterpret_cast<arrow::MemoryPool*>(memory_pool_id);
   if (pool == nullptr) {
@@ -698,6 +699,13 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_dataset_jni_JniWrapper_createScann
     JniAssertOkOrThrow(scanner_builder->FragmentScanOptions(scan_options));
   }
   JniAssertOkOrThrow(scanner_builder->BatchSize(batch_size));
+  // below 0 keeps the ScannerBuilder default
+  if (batch_readahead >= 0) {
+    JniAssertOkOrThrow(scanner_builder->BatchReadahead(batch_readahead));
+  }
+  if (fragment_readahead >= 0) {
+    JniAssertOkOrThrow(scanner_builder->FragmentReadahead(fragment_readahead));
+  }
 
   auto scanner = JniGetOrThrow(scanner_builder->Finish());
   std::shared_ptr<DisposableScannerAdaptor> scanner_adaptor =
@@ -705,6 +713,21 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_dataset_jni_JniWrapper_createScann
   jlong id = CreateNativeRef(scanner_adaptor);
   return id;
   JNI_METHOD_END(-1L)
+}
+
+/*
+ * Class:     org_apache_arrow_dataset_jni_JniWrapper
+ * Method:    createScanner
+ * Signature:
+ * (J[Ljava/lang/String;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;JI;[Ljava/lang/String;J)J
+ */
+JNIEXPORT jlong JNICALL Java_org_apache_arrow_dataset_jni_JniWrapper_createScanner(
+    JNIEnv* env, jobject obj, jlong dataset_id, jobjectArray columns,
+    jobject substrait_projection, jobject substrait_filter, jlong batch_size,
+    jint file_format_id, jobjectArray options, jlong memory_pool_id) {
+  return Java_org_apache_arrow_dataset_jni_JniWrapper_createScannerWithReadahead(
+      env, obj, dataset_id, columns, substrait_projection, substrait_filter, batch_size,
+      file_format_id, options, -1, -1, memory_pool_id);
 }
 
 /*
