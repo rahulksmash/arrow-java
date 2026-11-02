@@ -87,6 +87,21 @@ public class JniWrapper {
       long memoryPool);
 
   /**
+   * {@link #createScanner} with batch and fragment read-ahead; below 0 keeps the native default.
+   */
+  public native long createScannerWithReadahead(
+      long datasetId,
+      String[] columns,
+      ByteBuffer substraitProjection,
+      ByteBuffer substraitFilter,
+      long batchSize,
+      int fileFormat,
+      String[] serializedFragmentScanOptions,
+      int batchReadahead,
+      int fragmentReadahead,
+      long memoryPool);
+
+  /**
    * Get a serialized schema from native instance of a Scanner.
    *
    * @param scannerId the native pointer of the arrow::dataset::Scanner instance.
