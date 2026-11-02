@@ -10,7 +10,7 @@ read and the next.
 The stock `createScanner` entry point is kept, so a native library without the new one still works; scans there use
 Arrow's default read-ahead.
 
-Output: `org.apache.arrow:arrow-dataset:18.3.0-nr2`. It replaces `arrow-dataset:18.3.0`; all other arrow-java
+Output: `org.apache.arrow:arrow-dataset:18.3.0-nr-1`. It replaces `arrow-dataset:18.3.0`; all other arrow-java
 artifacts stay at stock 18.3.0.
 
 ## Native libraries
@@ -49,11 +49,11 @@ copy its `nr/.work/dist/` here before `nr/package.sh`.
 From a checked-in file:
 
 ```groovy
-api files("${rootDir}/libs/arrow-dataset-18.3.0-nr2.jar")
+api files("${rootDir}/libs/arrow-dataset-18.3.0-nr-1.jar")
 api "org.apache.arrow:arrow-c-data:18.3.0"   // a file brings no transitive dependencies
 ```
 
-Or from `~/.m2` after `nr/package.sh`: `implementation "org.apache.arrow:arrow-dataset:18.3.0-nr2"` with
+Or from `~/.m2` after `nr/package.sh`: `implementation "org.apache.arrow:arrow-dataset:18.3.0-nr-1"` with
 `mavenLocal()`. Either way, exclude the stock `arrow-dataset`.
 
 ```java

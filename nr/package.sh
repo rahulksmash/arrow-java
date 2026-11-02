@@ -25,7 +25,7 @@ fi
 rm -rf "$STAGE" && mkdir -p "$STAGE" "$OUT"
 MANIFEST=$OUT/arrow-dataset-$NR_VERSION.txt
 {
-  echo "arrow-dataset $NR_VERSION: arrow-java $STOCK_VERSION + $(git -C "$ROOT" rev-parse --short HEAD)$(git -C "$ROOT" diff --quiet HEAD -- . ':!nr' || echo ' (uncommitted changes)')"
+  echo "arrow-dataset $NR_VERSION: arrow-java $STOCK_VERSION + $(git -C "$ROOT" rev-parse --short HEAD)$([ -z "$(git -C "$ROOT" status --porcelain -- . ':!nr')" ] || echo ' (uncommitted changes)')"
   echo "native libraries:"
 } > "$MANIFEST"
 for LIB in $LIBS; do
@@ -42,7 +42,7 @@ done
 
 docker run --rm -v "$ROOT":/src -v "$HOME/.m2":/root/.m2 -w /src maven:3.9-eclipse-temurin-17-noble bash -c "
   set -euo pipefail
-  mvn -B -ntp -q -Parrow-jni -pl dataset -DskipTests -Darrow.cpp.build.dir=/src/nr/.work/stage/ package
+  mvn -B -ntp -q -Parrow-jni -pl dataset -DskipTests -Darrow.cpp.build.dir=/src/nr/.work/stage/ clean package
   mvn -B -ntp -q -Parrow-jni -pl dataset help:effective-pom -Doutput=/src/nr/.work/dataset-effective-pom.xml"
 
 # a pom with the stock module's compile and runtime dependencies at their resolved versions, so Maven consumers get them

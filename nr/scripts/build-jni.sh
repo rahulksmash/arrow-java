@@ -14,7 +14,7 @@ case "$(uname -m)" in
   *) echo "unsupported architecture $(uname -m)" >&2; exit 2 ;;
 esac
 WORK=$ROOT/nr/.work
-BUILD=$WORK/build-linux-$ARCH
+BUILD=$WORK/build-linux-$ARCH-$ARROW_CPP_VERSION
 CPP_INSTALL=$BUILD/cpp-install
 
 if [ ! -f "$CPP_INSTALL/lib/cmake/ArrowDataset/ArrowDatasetConfig.cmake" ]; then
